@@ -48,11 +48,12 @@
       "additionalProperties": false,
       "properties": {
         "text": { "type": "string", "minLength": 1, "maxLength": 20000 },
-        "explanation": { "type": ["string", "null"], "maxLength": 20000 },
+        "explanation": { "type": ["string", "null"], "maxLength": 20000, "description": "Exibida depois de responder. Cite alternativas pela letra da ordem no arquivo entre chaves ({{A}}, {{B}}…): a plataforma troca pela letra que a pessoa vê quando as alternativas são embaralhadas." },
         "alternatives": {
           "type": "array",
           "minItems": 2,
           "maxItems": 8,
+          "description": "Na ordem do material de origem, quando houver; a primeira é {{A}} na explicação.",
           "items": { "$ref": "#/$defs/alternative" },
           "contains": { "type": "object", "properties": { "is_correct": { "const": true } }, "required": ["is_correct"] }
         }

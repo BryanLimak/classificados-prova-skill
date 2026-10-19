@@ -19,6 +19,11 @@ const warnings = [];
 const err = (path, msg) => errors.push(`${path}: ${msg}`);
 const warn = (path, msg) => warnings.push(`${path}: ${msg}`);
 const isStr = (v) => typeof v === 'string';
+// Letras citadas: {{B}} na explicação (a plataforma troca pela letra da tela quando embaralha)
+const TOKEN_RE = /\{\{\s*([A-Za-z])\s*\}\}/g;
+const PLAIN_REF_RE = /(?:[Aa]lternativas?|[Ll]etras?|[Oo]p[çc](?:ão|ões)|[Oo]ptions?|[Aa]nswers?|[Rr]espostas?)\s*:?\s+[A-H](?![\p{L}\p{N}_])/u;
+const CITES_OTHER_RE = /(?:^|[^\p{L}\p{N}_])[A-H]\s+(?:e|and|ou|or)\s+[A-H](?![\p{L}\p{N}_])/u;
+const ABOVE_RE = /\b(?:todas|nenhuma)\s+(?:as|das)\s+(?:anteriores|acima)\b|\b(?:all|none)\s+of\s+the\s+above\b/i;
 
 let simulados;
 if (data && Array.isArray(data.simulados)) {
@@ -79,6 +84,19 @@ simulados.forEach((sim, si) => {
     });
     if (correct === 0) err(`${qp}.alternatives`, 'nenhuma alternativa marcada com "is_correct": true');
     if (correct > 1) multi++;
+    const n = q.alternatives.length;
+    if (isStr(q.explanation)) {
+      for (const m of q.explanation.matchAll(TOKEN_RE)) {
+        const i = m[1].toUpperCase().charCodeAt(0) - 65;
+        if (i >= n || i > 7) err(`${qp}.explanation`, `cita ${m[0]}, mas a questão tem ${n} alternativas (de {{A}} a {{${String.fromCharCode(64 + Math.min(n, 8))}}})`);
+      }
+      if (PLAIN_REF_RE.test(q.explanation)) warn(`${qp}.explanation`, 'cite alternativas pela letra entre chaves, como {{B}}: a letra acompanha o embaralhamento');
+    }
+    if (isStr(q.text) && /\{\{\s*[A-Za-z]\s*\}\}/.test(q.text)) warn(`${qp}.text`, '{{B}} só é trocado na explicação; no enunciado fica como está');
+    q.alternatives.forEach((a, ai) => {
+      if (!a || !isStr(a.text)) return;
+      if (CITES_OTHER_RE.test(a.text) || ABOVE_RE.test(a.text) || /\{\{\s*[A-Za-z]\s*\}\}/.test(a.text)) warn(`${qp}.alternatives[${ai}].text`, 'alternativa que cita outras ("A e B", "todas as anteriores") fica errada quando as alternativas são embaralhadas');
+    });
   });
 });
 

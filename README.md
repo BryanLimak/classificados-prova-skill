@@ -1,6 +1,6 @@
 # simulando-prova-skill
 
-Skill (conjunto de instruções) para qualquer assistente de IA gerar o **JSON de uma prova** no molde `simulando-prova/v1`, pronto para importar na plataforma **Classificados**.
+Skill (conjunto de instruções) para qualquer assistente de IA gerar o **JSON de uma prova** no molde `simulando-prova/v1`, pronto para importar na plataforma **Simulando**.
 
 Uma prova é um agrupador com **N simulados**. Cada simulado tem suas questões de múltipla escolha, nota mínima e tempo limite. Com a skill instalada, basta pedir:
 
@@ -28,6 +28,10 @@ A skill é texto. Qualquer assistente que aceite instruções consegue usá-la. 
 
 Depois de instalar, teste com um pedido curto ("crie uma prova de teste com 1 simulado de 3 questões sobre frações") e valide com `scripts/validate.js` ou importando na plataforma.
 
+### Atualizações
+
+O `SKILL.md` tem uma linha **"Versão da skill"** (data). A cada uso, o assistente confere no GitHub se há uma versão mais nova; se houver, segue a de lá e avisa você numa linha para atualizar a sua cópia. Assistentes sem acesso à internet usam a cópia que você instalou. Para atualizar à mão, baixe de novo o repositório (ou `git pull`) e substitua a pasta ou o texto colado.
+
 ## Como pedir (exemplos)
 
 - "Crie uma prova de **Inglês para iniciantes** com 2 simulados de 15 questões, um de vocabulário e um de gramática, enunciados em inglês."
@@ -36,6 +40,11 @@ Depois de instalar, teste com um pedido curto ("crie uma prova de teste com 1 si
 - "Gere um simulado só, 30 questões de **Salesforce Administrator**, com algumas questões de múltiplas respostas corretas."
 
 Se o assistente não perguntar nada, ele usa o padrão: 3 simulados de 20 questões, 4 alternativas, uma correta, dificuldade crescente.
+
+## Duas regras importantes
+
+- **O gabarito do material nunca é corrigido.** Ao converter apostila, PDF ou lista com respostas, a alternativa correta é a que a fonte indica, mesmo que o assistente discorde, e as alternativas ficam na ordem da fonte. Se a fonte não traz a resposta de alguma questão, o assistente responde e avisa quais foram respondidas por ele.
+- **Explicações citam alternativas como `{{B}}`.** A letra se refere à ordem no arquivo; na plataforma, cada `{{B}}` vira a letra com que aquela alternativa aparece para a pessoa, mesmo com as alternativas embaralhadas.
 
 ## O molde, em resumo
 
@@ -51,7 +60,7 @@ Se o assistente não perguntar nada, ele usa o padrão: 3 simulados de 20 quest�
       "questions": [
         {
           "text": "Enunciado?",
-          "explanation": "Por que a correta está certa.",
+          "explanation": "Por que {{A}} está certa.",
           "alternatives": [
             { "text": "Alternativa A", "is_correct": true },
             { "text": "Alternativa B" },
@@ -65,7 +74,7 @@ Se o assistente não perguntar nada, ele usa o padrão: 3 simulados de 20 quest�
 }
 ```
 
-O nome antigo do formato, `classificados-prova/v1`, continua aceito. Regras principais: 1 a 50 simulados; 1 a 1000 questões por simulado; 2 a 8 alternativas por questão; pelo menos uma correta (mais de uma vira questão de múltiplas respostas). Categorias aceitas: `tecnologia`, `programacao`, `certificacoes`, `idiomas`, `concursos`, `vestibular`, `escolar`, `negocios`, `saude`, `direito`, `exatas`, `humanas`, `ciencias`, `outros`. A tabela completa de campos está em `SKILL.md`.
+O nome antigo do formato, `classificados-prova/v1`, continua aceito. Regras principais: 1 a 50 simulados; 1 a 1000 questões por simulado; 2 a 8 alternativas por questão; pelo menos uma correta (mais de uma vira questão de múltiplas respostas); na explicação, `{{A}}` a `{{H}}` citam as alternativas pela ordem no arquivo. Categorias aceitas: `tecnologia`, `programacao`, `certificacoes`, `idiomas`, `concursos`, `vestibular`, `escolar`, `negocios`, `saude`, `direito`, `exatas`, `humanas`, `ciencias`, `outros`. A tabela completa de campos está em `SKILL.md`.
 
 ## Validar um arquivo
 
@@ -75,7 +84,7 @@ node scripts/validate.js minha-prova.json
 python scripts/validate.py minha-prova.json
 ```
 
-O validador mostra um resumo (simulados, questões, alternativas, corretas) e lista os problemas com a posição exata.
+O validador mostra um resumo (simulados, questões, alternativas, corretas) e lista os problemas com a posição exata. Ele também acusa `{{E}}` numa questão de 4 alternativas e avisa quando a explicação cita letras sem chaves ou quando uma alternativa cita outras ("A e B", "todas as anteriores").
 
 ## Licença
 

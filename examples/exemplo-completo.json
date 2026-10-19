@@ -25,7 +25,7 @@
         },
         {
           "text": "Em uma linguagem com tipagem dinâmica, o que acontece ao executar nome = 42 depois de nome = \"Ana\"?",
-          "explanation": "Com tipagem dinâmica a variável passa a referenciar um número; o tipo acompanha o valor, não a variável.",
+          "explanation": "{{B}} está certa: com tipagem dinâmica a variável passa a referenciar um número; o tipo acompanha o valor, não a variável. {{A}} descreve linguagens de tipagem estática.",
           "alternatives": [
             { "text": "Erro de compilação, porque o tipo da variável é fixo" },
             { "text": "A variável passa a guardar o número 42", "is_correct": true },

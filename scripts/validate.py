@@ -7,10 +7,16 @@ Sai com código 1 se houver erros. Também aceita a exportação de um simulado
 ({"questions": [...]}) e uma lista de simulados, como a plataforma.
 """
 import json
+import re
 import sys
 
 CATEGORIES = ['tecnologia', 'programacao', 'certificacoes', 'idiomas', 'concursos', 'vestibular', 'escolar',
               'negocios', 'saude', 'direito', 'exatas', 'humanas', 'ciencias', 'outros']
+# Letras citadas: {{B}} na explicação (a plataforma troca pela letra da tela quando embaralha)
+TOKEN_RE = re.compile(r'\{\{\s*([A-Za-z])\s*\}\}')
+PLAIN_REF_RE = re.compile(r'(?:[Aa]lternativas?|[Ll]etras?|[Oo]p[çc](?:ão|ões)|[Oo]ptions?|[Aa]nswers?|[Rr]espostas?)\s*:?\s+[A-H](?!\w)')
+CITES_OTHER_RE = re.compile(r'(?<!\w)[A-H]\s+(?:e|and|ou|or)\s+[A-H](?!\w)')
+ABOVE_RE = re.compile(r'\b(?:todas|nenhuma)\s+(?:as|das)\s+(?:anteriores|acima)\b|\b(?:all|none)\s+of\s+the\s+above\b', re.I)
 
 
 def main() -> int:
@@ -119,6 +125,23 @@ def main() -> int:
                 err(f'{qp}.alternatives', 'nenhuma alternativa marcada com "is_correct": true')
             if correct > 1:
                 multi += 1
+            n = len(alts)
+            expl = q.get('explanation')
+            if isinstance(expl, str):
+                for m in TOKEN_RE.finditer(expl):
+                    i = ord(m.group(1).upper()) - 65
+                    if i >= n or i > 7:
+                        last = chr(64 + min(n, 8))
+                        err(f'{qp}.explanation', f'cita {m.group(0)}, mas a questão tem {n} alternativas (de {{{{A}}}} a {{{{{last}}}}})')
+                if PLAIN_REF_RE.search(expl):
+                    warn(f'{qp}.explanation', 'cite alternativas pela letra entre chaves, como {{B}}: a letra acompanha o embaralhamento')
+            if isinstance(text, str) and TOKEN_RE.search(text):
+                warn(f'{qp}.text', '{{B}} só é trocado na explicação; no enunciado fica como está')
+            for ai, a in enumerate(alts):
+                if isinstance(a, dict) and isinstance(a.get('text'), str):
+                    t = a['text']
+                    if CITES_OTHER_RE.search(t) or ABOVE_RE.search(t) or TOKEN_RE.search(t):
+                        warn(f'{qp}.alternatives[{ai}].text', 'alternativa que cita outras ("A e B", "todas as anteriores") fica errada quando as alternativas são embaralhadas')
 
     if total >= 8 and positions and max(positions.values()) / total > 0.7:
         warn('alternativas', 'a resposta correta está quase sempre na mesma posição; varie')
